@@ -1,8 +1,8 @@
+import { kv } from '@vercel/kv';
+
 export const config = {
   runtime: 'edge',
 };
-
-const KVDB_BUCKET = 'NvruWsr639v3Tom7YUcBLQ';
 
 export default async function handler(request: Request) {
   const headers = {
@@ -25,12 +25,7 @@ export default async function handler(request: Request) {
         return new Response(JSON.stringify({ error: 'Key is required' }), { status: 400, headers });
       }
 
-      const response = await fetch(`https://kvdb.io/${KVDB_BUCKET}/${key}`);
-      if (response.status === 404) {
-        return new Response(JSON.stringify({ value: null }), { status: 200, headers });
-      }
-      
-      const data = await response.json();
+      const data = await kv.get(key);
       return new Response(JSON.stringify({ value: data }), { status: 200, headers });
     }
 
@@ -42,12 +37,7 @@ export default async function handler(request: Request) {
         return new Response(JSON.stringify({ error: 'Key is required' }), { status: 400, headers });
       }
 
-      await fetch(`https://kvdb.io/${KVDB_BUCKET}/${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(value),
-      });
-      
+      await kv.set(key, value);
       return new Response(JSON.stringify({ success: true }), { status: 200, headers });
     }
 
