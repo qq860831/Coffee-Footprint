@@ -94,25 +94,31 @@ export default function App() {
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-6">
         {/* Navigation Tabs */}
-        <nav className="flex justify-center flex-wrap gap-x-4 md:gap-x-8 gap-y-4 mb-10">
-          {TABS.map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                title={tab.label}
-                className={`p-3 relative transition-all duration-300 cursor-pointer rounded-full ${
-                  activeTab === tab.id 
-                  ? 'bg-coffee-dark text-warm-white shadow-md transform scale-110' 
-                  : 'bg-white text-coffee-light hover:bg-sand/30 hover:text-coffee-medium analog-border hover:scale-105'
-                }`}
-              >
-                <Icon className="w-5 h-5 md:w-6 md:h-6" />
-              </button>
-            );
-          })}
-        </nav>
+        <div className="flex flex-col items-center mb-10">
+          <nav className="flex justify-center flex-wrap gap-x-4 md:gap-x-8 gap-y-4 mb-4">
+            {TABS.map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  title={tab.label}
+                  className={`p-3 relative transition-all duration-300 cursor-pointer rounded-full ${
+                    activeTab === tab.id 
+                    ? 'bg-coffee-dark text-warm-white shadow-md transform scale-110' 
+                    : 'bg-white text-coffee-light hover:bg-sand/30 hover:text-coffee-medium analog-border hover:scale-105'
+                  }`}
+                >
+                  <Icon className="w-5 h-5 md:w-6 md:h-6" />
+                </button>
+              );
+            })}
+          </nav>
+          <div className="flex items-center space-x-2 text-[10px] font-bold tracking-widest uppercase text-coffee-light/60">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span>雲端同步已開啟</span>
+          </div>
+        </div>
 
         {/* Search & Actions section */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
