@@ -24,8 +24,20 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
         if (response.ok) {
           const data = await response.json();
           if (data && data.value !== null) {
+            // Cloud has data, sync it down to local
             setStoredValue(data.value);
             window.localStorage.setItem(key, JSON.stringify(data.value));
+          } else if (data && data.value === null) {
+            // Cloud is empty. If we have local data, push it UP to initialize the cloud database!
+            const localItem = window.localStorage.getItem(key);
+            if (localItem && localItem !== '[]') {
+              console.log('Pushing existing local data to empty cloud database...');
+              await fetch('/api/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, value: JSON.parse(localItem) }),
+              }).catch(err => console.error('Failed to initialize cloud data:', err));
+            }
           }
         }
       } catch (error) {
