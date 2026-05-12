@@ -4,7 +4,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { CoffeeCard } from './components/CoffeeCard';
 import { AddCafeForm } from './components/AddCafeForm';
 import { TAIWAN_CITIES } from './lib/taiwanData';
-import { Plus, Coffee, Map, Search, CheckCircle2, Bookmark, Heart } from 'lucide-react';
+import { Plus, Coffee, Map, Search, CheckCircle2, Bookmark, Heart, Download } from 'lucide-react';
 
 const TABS = [
   { id: 'all', label: '所有足跡', icon: Map },
@@ -53,6 +53,51 @@ export default function App() {
     setShops(prev => prev.map(s => s.id === id ? { ...s, isFavorite: !s.isFavorite } : s));
   };
 
+  const handleExportExcel = () => {
+    if (shops.length === 0) {
+      alert("目前沒有資料可以匯出");
+      return;
+    }
+
+    // CSV header
+    const headers = ['店名', '縣市', '區域', '狀態', '星級', '首選', '標籤', '心得亮點', '建立日期'];
+    
+    // CSV rows
+    const rows = shops.map(shop => {
+      const statusText = shop.status === 'visited' ? '已拜訪' : '待收藏';
+      const isFavoriteText = shop.isFavorite ? '是' : '否';
+      const tagsText = shop.tags.join('、');
+      const dateText = new Date(shop.createdAt).toLocaleDateString();
+      // Handle commas and newlines in highlights/name by wrapping in quotes
+      const escapeCsv = (text: string) => `"${String(text || '').replace(/"/g, '""')}"`;
+      
+      return [
+        escapeCsv(shop.name),
+        escapeCsv(shop.city),
+        escapeCsv(shop.district),
+        escapeCsv(statusText),
+        shop.rating || 0,
+        escapeCsv(isFavoriteText),
+        escapeCsv(tagsText),
+        escapeCsv(shop.highlights),
+        escapeCsv(dateText)
+      ].join(',');
+    });
+
+    // Add BOM for Excel UTF-8 compatibility
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `小咖足跡_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const openFormForEdit = (shop: CoffeeShop) => {
     setEditingShop(shop);
     setIsFormOpen(true);
@@ -94,31 +139,25 @@ export default function App() {
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-6">
         {/* Navigation Tabs */}
-        <div className="flex flex-col items-center mb-10">
-          <nav className="flex justify-center flex-wrap gap-x-4 md:gap-x-8 gap-y-4 mb-4">
-            {TABS.map(tab => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  title={tab.label}
-                  className={`p-3 relative transition-all duration-300 cursor-pointer rounded-full ${
-                    activeTab === tab.id 
-                    ? 'bg-coffee-dark text-warm-white shadow-md transform scale-110' 
-                    : 'bg-white text-coffee-light hover:bg-sand/30 hover:text-coffee-medium analog-border hover:scale-105'
-                  }`}
-                >
-                  <Icon className="w-5 h-5 md:w-6 md:h-6" />
-                </button>
-              );
-            })}
-          </nav>
-          <div className="flex items-center space-x-2 text-[10px] font-bold tracking-widest uppercase text-coffee-light/60">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            <span>雲端同步已開啟</span>
-          </div>
-        </div>
+        <nav className="flex justify-center flex-wrap gap-x-4 md:gap-x-8 gap-y-4 mb-10">
+          {TABS.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                title={tab.label}
+                className={`p-3 relative transition-all duration-300 cursor-pointer rounded-full ${
+                  activeTab === tab.id 
+                  ? 'bg-coffee-dark text-warm-white shadow-md transform scale-110' 
+                  : 'bg-white text-coffee-light hover:bg-sand/30 hover:text-coffee-medium analog-border hover:scale-105'
+                }`}
+              >
+                <Icon className="w-5 h-5 md:w-6 md:h-6" />
+              </button>
+            );
+          })}
+        </nav>
 
         {/* Search & Actions section */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -170,15 +209,24 @@ export default function App() {
             </div>
           </div>
           
-          <button 
-            onClick={() => {
-              setEditingShop(undefined);
-              setIsFormOpen(true);
-            }}
-            className="hidden md:flex items-center px-6 py-2 bg-coffee-dark text-warm-white rounded-full hover:bg-coffee-medium transition-colors font-bold tracking-wider cursor-pointer shadow-sm shrink-0"
-          >
-            <Plus className="w-4 h-4 mr-1" /> 新增紀錄
-          </button>
+          <div className="hidden md:flex items-center gap-2 shrink-0">
+            <button 
+              onClick={handleExportExcel}
+              className="flex items-center px-4 py-2 bg-white text-coffee-dark border border-coffee-dark rounded-full hover:bg-sand/20 transition-colors font-bold tracking-wider cursor-pointer shadow-sm"
+              title="匯出資料 (Excel/CSV)"
+            >
+              <Download className="w-4 h-4 mr-1" /> 匯出
+            </button>
+            <button 
+              onClick={() => {
+                setEditingShop(undefined);
+                setIsFormOpen(true);
+              }}
+              className="flex items-center px-6 py-2 bg-coffee-dark text-warm-white rounded-full hover:bg-coffee-medium transition-colors font-bold tracking-wider cursor-pointer shadow-sm"
+            >
+              <Plus className="w-4 h-4 mr-1" /> 新增紀錄
+            </button>
+          </div>
         </div>
 
         {/* Empty State */}
@@ -210,16 +258,25 @@ export default function App() {
         </div>
       </main>
 
-      {/* Floating Action Button (Mobile) */}
-      <button 
-        onClick={() => {
-          setEditingShop(undefined);
-          setIsFormOpen(true);
-        }}
-        className="md:hidden fixed bottom-8 right-8 w-14 h-14 bg-coffee-dark text-warm-white rounded-full shadow-lg flex items-center justify-center hover:bg-coffee-medium transition-transform active:scale-95 cursor-pointer"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
+      {/* Floating Action Buttons (Mobile) */}
+      <div className="md:hidden fixed bottom-8 right-8 flex flex-col gap-3">
+        <button 
+          onClick={handleExportExcel}
+          className="w-14 h-14 bg-white text-coffee-dark border border-coffee-dark rounded-full shadow-lg flex items-center justify-center hover:bg-sand/20 transition-transform active:scale-95 cursor-pointer"
+          title="匯出資料 (Excel/CSV)"
+        >
+          <Download className="w-6 h-6" />
+        </button>
+        <button 
+          onClick={() => {
+            setEditingShop(undefined);
+            setIsFormOpen(true);
+          }}
+          className="w-14 h-14 bg-coffee-dark text-warm-white rounded-full shadow-lg flex items-center justify-center hover:bg-coffee-medium transition-transform active:scale-95 cursor-pointer"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      </div>
 
       {/* Modal Overlay */}
       {isFormOpen && (
