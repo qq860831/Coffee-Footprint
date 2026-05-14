@@ -258,25 +258,16 @@ export default function App() {
         </div>
       </main>
 
-      {/* Floating Action Buttons (Mobile) */}
-      <div className="md:hidden fixed bottom-8 right-8 flex flex-col gap-3">
-        <button 
-          onClick={handleExportExcel}
-          className="w-14 h-14 bg-white text-coffee-dark border border-coffee-dark rounded-full shadow-lg flex items-center justify-center hover:bg-sand/20 transition-transform active:scale-95 cursor-pointer"
-          title="匯出資料 (Excel/CSV)"
-        >
-          <Download className="w-6 h-6" />
-        </button>
-        <button 
-          onClick={() => {
-            setEditingShop(undefined);
-            setIsFormOpen(true);
-          }}
-          className="w-14 h-14 bg-coffee-dark text-warm-white rounded-full shadow-lg flex items-center justify-center hover:bg-coffee-medium transition-transform active:scale-95 cursor-pointer"
-        >
-          <Plus className="w-6 h-6" />
-        </button>
-      </div>
+      {/* Floating Action Button (Mobile) */}
+      <button 
+        onClick={() => {
+          setEditingShop(undefined);
+          setIsFormOpen(true);
+        }}
+        className="md:hidden fixed bottom-8 right-8 w-14 h-14 bg-coffee-dark text-warm-white rounded-full shadow-lg flex items-center justify-center hover:bg-coffee-medium transition-transform active:scale-95 cursor-pointer"
+      >
+        <Plus className="w-6 h-6" />
+      </button>
 
       {/* Modal Overlay */}
       {isFormOpen && (
